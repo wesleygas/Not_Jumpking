@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
  	public float gravity = 9.8f;       // Depois de incluido, alterar no Unity Editor
 	public float chargeSpeed = .5f;
 	public float jumpXModifier = 1f;
+	public float jumpXBoost = 0f;
 	float jumpSpeed = 0f;
  	public bool isGrounded;		// Se está no chão
 	public bool wasGroundedLastFrame;
@@ -21,6 +22,7 @@ public class PlayerController : MonoBehaviour
 	public bool hitHead;
 	public bool hitLeft;
 	public bool hitRight;
+	public bool gotFlower = false;
 	float x_direction = .01f;
 
 	float flying_speed;
@@ -74,15 +76,19 @@ public class PlayerController : MonoBehaviour
 				jumpSpeed = 1f;
 				moveDirection.x = 0;
 			}
-			if(isCharging && Input.GetButton("Jump")){
-				moveDirection.x = 0;
-				jumpSpeed *= 1f + chargeSpeed;
+			if(isCharging){
+				if(Input.GetButton("Jump")){
+					moveDirection.x = 0;
+					jumpSpeed *= 1f + chargeSpeed;
+				}else{
+					isCharging = false;
+				}
 			}
 			if(Input.GetButtonUp("Jump"))
 			{
 				if(jumpSpeed > maxjumpSpeed) jumpSpeed = maxjumpSpeed;
 				moveDirection.y = jumpSpeed;
-				flying_speed = x_direction*jumpSpeed*jumpXModifier;
+				flying_speed = x_direction*(jumpSpeed*jumpXModifier + jumpXBoost);
 				moveDirection.x = flying_speed;
 				isJumping = true;
 				isCharging = false;
@@ -92,6 +98,10 @@ public class PlayerController : MonoBehaviour
 			moveDirection.y = 0f; //
 		}else if(isJumping){
 			moveDirection.x = flying_speed;
+		}
+		if(gotFlower){
+			moveDirection.x = horizontal_input; // recupera valor dos controles
+			moveDirection.x *= walkSpeed;
 		}
 		if(hitHead){
 			if(isJumping){
@@ -120,5 +130,4 @@ public class PlayerController : MonoBehaviour
 		movingSlope = flags.movingDownSlope;
 		hitHead = flags.above;
     }
-
 }
