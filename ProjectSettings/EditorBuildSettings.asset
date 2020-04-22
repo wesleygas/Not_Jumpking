@@ -6,9 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/parabains.unity
-    guid: 396f328eace438143b2a393e6a3fe4ae
-  - enabled: 1
     path: Assets/Scenes/main.unity
     guid: 53f4c3a44efb72e47b72657837f2e9b8
+  - enabled: 1
+    path: Assets/Scenes/parabains.unity
+    guid: 396f328eace438143b2a393e6a3fe4ae
   m_configObjects: {}
