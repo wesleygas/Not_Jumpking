@@ -7,16 +7,25 @@ public class godCapsule : MonoBehaviour
 {
     // Start is called before the first frame update
     private Renderer rend;
+    
     public float Speed = 1;
     void Start()
     {
         rend = GetComponent<Renderer>();
-
+        
     }
 
     // Update is called once per frame
     void Update()
     {
         rend.material.SetColor("_Color", Color.HSVToRGB( Mathf.PingPong(Time.time * Speed, 1), 1, 1));
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision){
+        if(collision.tag == "Player"){
+            FindObjectOfType<AudioManager>().Play("waffle");
+            collision.gameObject.SendMessage("EnableGodMode");
+            Destroy(gameObject);
+        }
     }
 }

@@ -14,15 +14,18 @@ public class PlayerController : MonoBehaviour
 	public float jumpXModifier = 1f;
 	public float jumpXBoost = 0f;
 	float jumpSpeed = 0f;
- 	public bool isGrounded;		// Se está no chão
-	public bool wasGroundedLastFrame;
-	public bool movingSlope;
- 	public bool isJumping;		// Se está pulando
-	public bool isCharging;
-	public bool hitHead;
-	public bool hitLeft;
-	public bool hitRight;
+ 	private bool isGrounded;		// Se está no chão
+	private bool wasGroundedLastFrame;
+ 	private bool isJumping;		// Se está pulando
+	private bool isCharging;
+	private bool isWalking;
+	private bool hitHead;
+	private bool hitLeft;
+	private bool hitRight;
+
+	private bool isDead = false;
 	public bool gotFlower = false;
+	public bool jumpPower = false;
 	float x_direction = .01f;
 
 	float flying_speed;
@@ -31,14 +34,44 @@ public class PlayerController : MonoBehaviour
  	private CharacterController2D characterController;	//Componente do Char. Controller
 
 	public Animator animator;
+	private GameObject jumpNo;
+	private GameObject jumpUI;
+
+	private AudioManager audioManager;
+		
 
     void Start()
     {
+		audioManager = FindObjectOfType<AudioManager>();
     	characterController = GetComponent<CharacterController2D>(); //identif. o componente
+		jumpUI = GameObject.Find("JStrenght");
+		jumpUI.SetActive(false);
+		//StartCoroutine(walk());
     }
 
     void Update()
     {
+		if(isDead){
+			return;
+		}
+		if(jumpPower){
+			if(Input.GetKeyDown("page up")){
+				Debug.Log("Got +");
+				if(jumpXBoost < 2f){
+					jumpXBoost+= .5f;
+					jumpNo.SendMessage("change", jumpXBoost);
+				}
+			}
+			if(Input.GetKeyDown("page down")){
+				Debug.Log("Got -");
+				if(jumpXBoost > 0f){
+					jumpXBoost-= .5f;
+					jumpNo.SendMessage("change", jumpXBoost);
+				}
+			}
+		}
+		
+
 		horizontal_input = Input.GetAxis("Horizontal");
         if(horizontal_input != 0){
 			if(horizontal_input > 0){
@@ -61,6 +94,7 @@ public class PlayerController : MonoBehaviour
 			if(isJumping){
 				flying_speed = 0.0f;
 				jumpSpeed = 0f;	
+				audioManager.Play("fall");
 				isJumping = false;
 			}else{
 				if(!isCharging){
@@ -72,9 +106,11 @@ public class PlayerController : MonoBehaviour
 			
 			  
 			if(Input.GetButtonDown("Jump")){
+				audioManager.Play("charge");
 				isCharging = true;
 				jumpSpeed = 1f;
 				moveDirection.x = 0;
+				
 			}
 			if(isCharging){
 				if(Input.GetButton("Jump")){
@@ -85,7 +121,8 @@ public class PlayerController : MonoBehaviour
 				}
 			}
 			if(Input.GetButtonUp("Jump"))
-			{
+			{	
+				audioManager.Play("jump");
 				if(jumpSpeed > maxjumpSpeed) jumpSpeed = maxjumpSpeed;
 				moveDirection.y = jumpSpeed;
 				flying_speed = x_direction*(jumpSpeed*jumpXModifier + jumpXBoost);
@@ -109,9 +146,11 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 		
+		isWalking = (Mathf.Abs(moveDirection.x) > .2) && !isJumping;
+
 		animator.SetBool("charging", isCharging);
 		animator.SetBool("jumping", isJumping);
-		animator.SetBool("walking", Mathf.Abs(moveDirection.x) > .2);
+		animator.SetBool("walking", isWalking);
 		animator.SetFloat("y_speed", moveDirection.y);
 
 		moveDirection.y -= gravity * Time.deltaTime;	// aplica a gravidade
@@ -127,7 +166,38 @@ public class PlayerController : MonoBehaviour
 		flags = characterController.collisionState; 	// recupera flags
 		isGrounded = flags.below;				// define flag de chão
 		wasGroundedLastFrame = flags.wasGroundedLastFrame;
-		movingSlope = flags.movingDownSlope;
 		hitHead = flags.above;
     }
+
+
+	void JumpUnlock(){
+		
+		audioManager.Play("win");
+		jumpUI.SetActive(true);
+		jumpNo = GameObject.Find("JLevel");
+		jumpPower = true;
+	}
+
+	void EnableGodMode(){
+		gotFlower = true;
+		GameObject.Find("JLevel").SendMessage("activate");
+		//set ui accordingly
+	}
+
+	void GotHit(){
+		audioManager.Play("hit");
+		StartCoroutine(death());
+
+	}
+
+	IEnumerator death(){
+		animator.SetTrigger("die");
+		isDead = true;
+		yield return new WaitForSeconds(1f);
+		gameObject.transform.position = new Vector3(-7f,-3.5f,0f);
+		yield return new WaitForSeconds(4f);
+		isDead = false;
+		animator.ResetTrigger("die");
+		yield return null;
+	}
 }
