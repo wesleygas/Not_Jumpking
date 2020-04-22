@@ -1,6 +1,7 @@
 # Controles:
 
 Setas  <-> Movimento horizontal
+
 Espaço - Pulo:
  - Press Iniciar
  - Hold Carregar
